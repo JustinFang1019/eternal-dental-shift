@@ -16,12 +16,16 @@
     (async()=>{
       try{
         if(!('DecompressionStream' in window)) throw new Error('瀏覽器不支援 DecompressionStream');
-        const files=["payload/p00.txt", "payload/p01.txt", "payload/p02.txt", "payload/p03.txt", "payload/p04.txt", "payload/p05.txt", "payload/p06.txt"];
+        const files=["payload/p00.txt","payload/p01.txt","payload/p02.txt","payload/p03a.txt","payload/p03b.txt","payload/p04.txt","payload/p05.txt","payload/p06.txt"];
         const parts=await Promise.all(files.map(async path=>{const r=await fetch(path,{cache:'no-store'});if(!r.ok)throw new Error(`${path} 載入失敗 (${r.status})`);return r.text()}));
-        const b=atob(parts.join('')),u=new Uint8Array(b.length);
+        const encoded=parts.join('');
+        if(encoded.length!==45652) throw new Error('應用程式資料長度驗證失敗');
+        const b=atob(encoded),u=new Uint8Array(b.length);
         for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
         const stream=new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'));
         const html=await new Response(stream).text();
+        const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html))),x=>x.toString(16).padStart(2,'0')).join('');
+        if(hash!=="5c6d1bf7997a771298353506a570fb89333518cbba81d2b113f6d5b7054765f7") throw new Error('應用程式完整性驗證失敗');
         document.open();document.write(html);document.close();
       }catch(error){
         document.body.innerHTML=`<main style="max-width:680px;padding:32px"><h1>無法載入排班系統</h1><p>請重新整理頁面，並使用最新版 Chrome、Edge、Safari 或 Firefox。</p><pre style="white-space:pre-wrap;background:#fff;padding:12px;border-radius:8px">${String(error)}</pre></main>`;
