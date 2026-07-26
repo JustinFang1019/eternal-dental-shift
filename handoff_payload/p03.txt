@@ -1,0 +1,425 @@
+| DAT-001 | JSON 備份 | 匯出完整 state；匯入前確認，成功後覆蓋並重繪 |
+| DAT-002 | CSV 匯出 | 欄位與 UTF-8 BOM 正確，可由 Excel 開啟繁中 |
+| RWD-001 | 手機版 | 390×844 下可開啟側欄、表單改單欄、Modal 由底部顯示 |
+| PRT-001 | 列印 | 只列印排班頁，A4 橫向，隱藏操作按鈕與導覽 |
+
+### 15.3 建議測試分層
+
+#### Unit
+
+- 日期週起始與跨月。
+- 時間重疊邊界。
+- 工時計算。
+- 覆蓋計算。
+- 自動補缺候選排序。
+- migration。
+- CSV quote。
+- 權限規則。
+
+#### Integration
+
+- 建立人員後可排班。
+- 建立班別後計入覆蓋。
+- 核准休假後產生衝突。
+- 刪除參照資料行為。
+- 匯出再匯入等價。
+- 多人同時修改的版本衝突。
+
+#### E2E
+
+- 完整排班工作流。
+- 休假審核。
+- 複製週與自動補缺。
+- 手機操作。
+- 列印／匯出。
+- 角色權限。
+- 後端斷線與重試。
+
+### 15.4 Definition of Done
+
+每一個 feature 至少要：
+
+- 有明確規格與驗收案例。
+- 通過 lint、typecheck、unit、integration、E2E。
+- 不破壞既有 JSON。
+- 有 migration。
+- UI 支援桌機與手機。
+- 錯誤可理解且不丟資料。
+- 更新 Release Notes。
+- 更新部署與回復說明。
+- 安全與權限由後端驗證。
+- 重要寫入有 audit log。
+
+---
+
+## 16. 在其他地方快速啟動
+
+### 16.1 最簡單：直接用單檔 HTML
+
+```bash
+git clone https://github.com/JustinFang1019/eternal-dental-shift.git
+cd eternal-dental-shift
+```
+
+直接開啟：
+
+```text
+Eternal_Shift_v1.1.1.html
+```
+
+或啟動本機靜態伺服器：
+
+```bash
+python -m http.server 8080
+```
+
+然後開啟：
+
+```text
+http://localhost:8080/Eternal_Shift_v1.1.1.html
+```
+
+### 16.2 部署到任意靜態主機
+
+只要主機可提供靜態檔案即可，例如：
+
+- Cloudflare Pages
+- Netlify
+- Render Static Site
+- GitHub Pages
+- Nginx／Apache
+- 公司內部靜態網站
+
+將完整檔案命名為 `index.html` 放在發布根目錄即可。
+
+### 16.3 GitHub Pages 現況
+
+Repository 已有 `gh-pages` 分支與完整 `index.html`。若網址仍為 404，Repository 擁有者需在：
+
+```text
+Settings → Pages
+Source: Deploy from a branch
+Branch: gh-pages
+Folder: / (root)
+```
+
+設定完成後網址預期為：
+
+```text
+https://justinfang1019.github.io/eternal-dental-shift/
+```
+
+### 16.4 不建議直接雙擊 loader
+
+完整 HTML 可用 `file://` 開啟；若使用分割 payload 的 loader，瀏覽器可能因 `fetch()` 本機檔案限制而失敗，必須透過 HTTP server。外部開發請以完整單檔為基準。
+
+---
+
+## 17. 建議的正式版架構
+
+### 17.1 前端
+
+可選：
+
+- React + TypeScript + Vite
+- Vue 3 + TypeScript + Vite
+- SvelteKit
+- 維持 Vanilla TypeScript
+
+核心要求比框架更重要：
+
+- domain rules 與 UI 分離。
+- 所有 server state 透過 repository／query layer。
+- 表單 schema validation。
+- 日期使用 date-only library 或 Temporal polyfill。
+- 排班表虛擬化，避免大量 DOM。
+- 保留離線匯出／匯入。
+
+### 17.2 後端
+
+可選：
+
+- FastAPI
+- NestJS
+- ASP.NET Core
+- Spring Boot
+
+基本要求：
+
+- REST 或 GraphQL。
+- PostgreSQL。
+- Transaction。
+- RBAC。
+- Audit log。
+- Optimistic concurrency。
+- Background job。
+- 備份。
+- OpenAPI。
+
+### 17.3 建議模組
+
+```text
+apps/
+  web/
+  api/
+packages/
+  domain/
+    schedule-rules
+    coverage
+    conflicts
+    migrations
+  ui/
+  shared-types/
+infra/
+  migrations/
+  docker/
+  deployment/
+tests/
+  unit/
+  integration/
+  e2e/
+```
+
+### 17.4 保留單機模式
+
+正式版仍建議提供：
+
+- JSON 匯出。
+- 只讀離線班表。
+- 網路中斷暫存。
+- 災難回復用單檔報表。
+
+但不要讓 LocalStorage 成為正式多人資料的 source of truth。
+
+---
+
+## 18. 建議資料庫模型
+
+### 18.1 主要資料表
+
+#### clinics
+
+- `id uuid pk`
+- `name`
+- `english_name`
+- `phone`
+- `address`
+- `timezone`
+- `active`
+- timestamps
+
+#### clinic_rooms
+
+- `id uuid pk`
+- `clinic_id fk`
+- `name`
+- `room_type`
+- `capacity`
+- `active`
+- unique `(clinic_id, name)`
+
+#### users
+
+- `id uuid pk`
+- `email`
+- `password_hash` 或外部 SSO ID
+- `status`
+- `last_login_at`
+- timestamps
+
+#### memberships
+
+- `user_id`
+- `clinic_id`
+- `role`: owner/admin/scheduler/manager/staff/viewer
+- unique `(user_id, clinic_id)`
+
+#### staff
+
+- `id uuid pk`
+- `clinic_id`
+- `user_id nullable`
+- `display_name`
+- `job_role_id`
+- `employment_title`
+- `weekly_max_minutes`
+- `phone`
+- `color`
+- `active`
+- `is_demo`
+- timestamps
+- row version
+
+#### staff_skills
+
+- `staff_id`
+- `skill_id`
+
+#### staff_availability
+
+- `id`
+- `staff_id`
+- `weekday`
+- `start_time nullable`
+- `end_time nullable`
+- `available`
+- effective date range
+
+#### shift_types
+
+- `id`
+- `clinic_id`
+- `name`
+- `start_time`
+- `end_time`
+- `color`
+- `active`
+
+#### shift_type_weekdays
+
+- `shift_type_id`
+- `weekday`
+
+#### shift_type_requirements
+
+- `shift_type_id`
+- `job_role_id`
+- `required_count`
+
+#### shifts
+
+- `id`
+- `clinic_id`
+- `schedule_version_id`
+- `staff_id`
+- `shift_type_id`
+- `room_id`
+- `work_date date`
+- `start_time time`
+- `end_time time`
+- `on_call`
+- `source`
+- `note_private`
+- `note_public`
+- `status`: draft/published/cancelled
+- timestamps
+- row version
+
+#### leaves
+
+- `id`
+- `clinic_id`
+- `staff_id`
+- `start_date`
+- `end_date`
+- `start_time nullable`
+- `end_time nullable`
+- `kind`
+- `status`
+- `reason_private`
+- `reviewed_by`
+- `reviewed_at`
+- timestamps
+
+#### clinic_closures
+
+- `clinic_id`
+- `date`
+- `closed`
+- `reason`
+- 可選班別層級覆寫
+
+#### schedule_versions
+
+- `id`
+- `clinic_id`
+- `week_start`
+- `version`
+- `status`: draft/published/archived
+- `published_by`
+- `published_at`
+
+#### audit_logs
+
+- `id`
+- `clinic_id`
+- `actor_user_id`
+- `entity_type`
+- `entity_id`
+- `action`
+- `before_json`
+- `after_json`
+- `request_id`
+- `created_at`
+
+### 18.2 關鍵索引與限制
+
+- `shifts (clinic_id, work_date)`
+- `shifts (staff_id, work_date, start_time, end_time)`
+- `shifts (room_id, work_date, start_time, end_time)`
+- `leaves (staff_id, start_date, end_date)`
+- `schedule_versions (clinic_id, week_start, version)`
+- PostgreSQL exclusion constraint 或 transaction 內檢查人員及診間重疊。
+- 所有寫入帶 `version`，避免後寫覆蓋先寫。
+
+---
+
+## 19. 建議 API
+
+Base：
+
+```text
+/api/v1
+```
+
+### 19.1 Bootstrap
+
+```http
+GET /clinics/:clinicId/bootstrap
+```
+
+回傳診所、人員、房間、班別、指定日期範圍排班、休假與使用者權限。
+
+### 19.2 Staff
+
+```http
+GET    /clinics/:clinicId/staff
+POST   /clinics/:clinicId/staff
+GET    /clinics/:clinicId/staff/:staffId
+PATCH  /clinics/:clinicId/staff/:staffId
+DELETE /clinics/:clinicId/staff/:staffId
+```
+
+有參照時 DELETE 回應衝突，前端改用停用。
+
+### 19.3 Shifts
+
+```http
+GET    /clinics/:clinicId/shifts?from=YYYY-MM-DD&to=YYYY-MM-DD
+POST   /clinics/:clinicId/shifts
+PATCH  /clinics/:clinicId/shifts/:shiftId
+DELETE /clinics/:clinicId/shifts/:shiftId
+POST   /clinics/:clinicId/shifts/copy-week
+POST   /clinics/:clinicId/shifts/auto-fill
+POST   /clinics/:clinicId/shifts/validate
+```
+
+所有寫入由後端重新驗證重疊、休假、診間與權限。
+
+### 19.4 Leaves
+
+```http
+GET    /clinics/:clinicId/leaves
+POST   /clinics/:clinicId/leaves
+PATCH  /clinics/:clinicId/leaves/:leaveId
+POST   /clinics/:clinicId/leaves/:leaveId/approve
+POST   /clinics/:clinicId/leaves/:leaveId/reject
+DELETE /clinics/:clinicId/leaves/:leaveId
+```
+
+### 19.5 Settings
+
+```http
+GET   /clinics/:clinicId/settings
+PATCH /clinics/:clinicId
+CRUD  /clinics/:clinicId/rooms
