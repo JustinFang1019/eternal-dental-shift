@@ -2,12 +2,13 @@
   "source_bytes": 99990,
   "gzip_bytes": 34239,
   "base64_chars": 45652,
-  "chunks": 7,
+  "chunks": 8,
   "chunk_lengths": [
     7000,
     7000,
     7000,
-    7000,
+    3500,
+    3500,
     7000,
     7000,
     3652
