@@ -1,6 +1,6 @@
 # Eternal Shift｜依貝美學牙醫診所排班系統
 
-依貝美學牙醫診所客製化的牙醫排班系統。提供可離線使用的完整單檔 HTML，以及 GitHub Pages 自動發布流程；不需安裝 npm、後端或資料庫。
+依貝美學牙醫診所客製化的牙醫排班系統。提供可離線使用的完整單檔 HTML，以及可由 GitHub Pages 直接發布的 `gh-pages` 分支；不需安裝 npm、後端或資料庫。
 
 ## 立即使用
 
@@ -34,12 +34,21 @@
 
 ## GitHub Pages 發布
 
-Repository 內含 `.github/workflows/pages.yml`。首次使用時，請進入 **Settings → Pages**，將 **Source** 設為 **GitHub Actions**。之後推送至 `main`，workflow 會：
+`gh-pages` 分支已放置可直接發布的完整單檔版本：
 
-1. 重建完整單檔 HTML。
-2. 驗證檔案長度、gzip SHA-256 與原始 HTML SHA-256。
-3. 更新正式 Release 附件。
-4. 發布 GitHub Pages。
+- `index.html`
+- `404.html`
+- `Eternal_Shift_v1.1.1.html`
+- `.nojekyll`
+
+首次啟用請進入 **Settings → Pages**，設定：
+
+1. **Source**：`Deploy from a branch`
+2. **Branch**：`gh-pages`
+3. **Folder**：`/ (root)`
+4. 按下 **Save**
+
+之後 GitHub Pages 會直接從 `gh-pages` 分支發布，不依賴自訂 GitHub Actions workflow。
 
 ## 資料邊界
 
