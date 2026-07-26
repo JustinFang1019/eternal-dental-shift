@@ -1,11 +1,15 @@
 # Eternal Shift｜依貝美學牙醫診所排班系統
 
-依貝美學牙醫診所客製化的牙醫排班系統。開啟 GitHub Pages 後即可直接使用，不需安裝 npm、後端或資料庫。
+依貝美學牙醫診所客製化的牙醫排班系統。提供可離線使用的完整單檔 HTML，以及 GitHub Pages 自動發布流程；不需安裝 npm、後端或資料庫。
 
-## 線上入口
+## 立即使用
 
+- [下載正式版單檔 HTML v1.1.1](https://github.com/JustinFang1019/eternal-dental-shift/releases/download/v1.1.1/Eternal_Shift_v1.1.1.html)
+- [查看 v1.1.1 Release](https://github.com/JustinFang1019/eternal-dental-shift/releases/tag/v1.1.1)
+- [Repository 內的完整單檔 HTML](Eternal_Shift_v1.1.1.html)
 - GitHub Pages：`https://justinfang1019.github.io/eternal-dental-shift/`
-- Repository：`https://github.com/JustinFang1019/eternal-dental-shift`
+
+下載 HTML 後直接用 Chrome、Edge、Safari 或 Firefox 開啟即可。所有排班資料會儲存在目前瀏覽器的 LocalStorage。
 
 ## 完整功能
 
@@ -23,19 +27,29 @@
 
 ## 使用方式
 
-1. 開啟 GitHub Pages 網址。
+1. 下載 Release 附件 `Eternal_Shift_v1.1.1.html`，或開啟已啟用的 GitHub Pages 網址。
 2. 第一次開啟會載入展示資料。
 3. 所有修改會自動儲存在目前瀏覽器。
 4. 請定期從系統匯出 JSON 備份；更換電腦或瀏覽器時再匯入。
 
 ## GitHub Pages 發布
 
-Repository 內含 `.github/workflows/pages.yml`。在 Repository 的 **Settings → Pages** 將 **Source** 設為 **GitHub Actions** 後，推送至 `main` 即會自動發布。
+Repository 內含 `.github/workflows/pages.yml`。首次使用時，請進入 **Settings → Pages**，將 **Source** 設為 **GitHub Actions**。之後推送至 `main`，workflow 會：
+
+1. 重建完整單檔 HTML。
+2. 驗證檔案長度、gzip SHA-256 與原始 HTML SHA-256。
+3. 更新正式 Release 附件。
+4. 發布 GitHub Pages。
 
 ## 資料邊界
 
 這是完整的單機前端版。單一 HTML 前端無法提供多人即時同步、帳號權限、伺服器備份、操作稽核與 LINE／Email 通知；上述能力需要後端服務。官網公開醫師資料與系統展示人力已在介面內分開標示。
 
-## 版本
+## 版本與驗證
 
-目前版本：**v1.1.1**。詳細內容請見 [RELEASE_NOTES.md](RELEASE_NOTES.md)，驗證結果請見 [VALIDATION_REPORT.md](VALIDATION_REPORT.md)。
+目前版本：**v1.1.1**。
+
+- [Release Notes](RELEASE_NOTES.md)
+- [Validation Report](VALIDATION_REPORT.md)
+- 原始 HTML：99,990 bytes
+- SHA-256：`5c6d1bf7997a771298353506a570fb89333518cbba81d2b113f6d5b7054765f7`
